@@ -5,6 +5,8 @@
 # is a script that's processed with eval, so you need to be very careful to
 # make certain that what you quote is what you want to quote.
 
+ac_help='--with-pam		Use pam for server authentication'
+
 # load in the configuration file
 #
 TARGET=dropbear
@@ -13,6 +15,15 @@ TARGET=dropbear
 AC_INIT $TARGET
 
 AC_PROG_CC
+
+if [ "$WITH_PAM" ]; then
+    if AC_LIBRARY pam_authenticate -lpam; then
+	AC_DEFINE 'DROPBEAR_SVR_PAM_AUTH' '1'
+	LOG "Building with pam support"
+    else
+	FAIL "configured --with-pam, but no pam library found?"
+    fi
+fi
 
 AC_SUB 'BUNDLED_LIBTOM' '1'
 AC_DEFINE 'BUNDLED_LIBTOM' 1
