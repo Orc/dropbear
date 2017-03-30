@@ -5,7 +5,8 @@
 # is a script that's processed with eval, so you need to be very careful to
 # make certain that what you quote is what you want to quote.
 
-ac_help='--with-pam		Use pam for server authentication'
+ac_help='--with-pam		Use pam for server authentication
+--with-passwd		use passwd authentication (does not coexist with pam)'
 
 # load in the configuration file
 #
@@ -19,16 +20,29 @@ AC_PROG_CC
 if [ "$WITH_PAM" ]; then
     if AC_LIBRARY pam_authenticate -lpam; then
 	AC_DEFINE 'DROPBEAR_SVR_PAM_AUTH' '1'
-	LOG "Building with pam support"
+	AC_SUB 'CRYPTLIB' ''
     else
-	FAIL "configured --with-pam, but no pam library found?"
+	AC_FAIL "configured --with-pam, but no pam library found?"
     fi
 fi
+if [ "$WITH_PASSWD" ]; then
+    if [ "$WITH_PAM" ]; then
+	AC_FAIL "cannot sensibly do passwd & pam authentication"
+    else
+	if AC_LIBRARY crypt -lcrypt; then
+	    AC_DEFINE 'DROPBEAR_SVR_PASSWD_AUTH' '1'
+	    AC_SUB CRYPTLIB '-lcrypt'
+	else
+	    AC_FAIL "--with-passwd requires a crypt() function"
+	fi
+    fi
+fi
+
+LOG "Building with ${WITH_PAM:+pam}${WITH_PASSWD:+passwd} authentication"
 
 AC_SUB 'BUNDLED_LIBTOM' '1'
 AC_DEFINE 'BUNDLED_LIBTOM' 1
 AC_SUB 'EXEEXT' ''
-AC_SUB 'CRYPTLIB' ''
 
 AC_LIBRARY inflate -lz || FAIL "dropbear needs zlib"
 
@@ -76,6 +90,7 @@ fi
 # and if that fails check for utmp and a bunch of
 # utmp fields, and if that fails maybe hand it off
 # to login?
+AC_LIBRARY login -lutil && AC_CHECK_FUNCS logout
 if AC_CHECK_HEADERS utmpx.h; then
     AC_DEFINE DISABLE_UTMP 1
     for field in ut_host ut_syslen ut_type ut_id ut_addr ut_addr_v6 ut_time ut_tv; do
@@ -90,6 +105,9 @@ else
     AC_DEFINE DISABLE_UTMPX 1
     AC_DEFINE DISABLE_UTMP 1
 fi
+
+AC_CHECK_FUNCS logwtmp
+AC_CHECK_FUNCS logwtmpx
 
 AC_CHECK_HEADERS util.h
 AC_CHECK_FUNCS writev
