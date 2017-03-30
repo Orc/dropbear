@@ -874,6 +874,45 @@ AC_C_INLINE() {
 
 
 #
+# AC_WHATIS tries to print out the value of a macro
+#
+AC_WHATIS() {
+    MODE=$1	# what it should be (string,int,char)
+    shift
+    MACRO=$1	# the macro name
+    shift
+
+    case "$MODE" in
+    string)
+	__fmt='%s' ;;
+    int)
+	__fmt='%d' ;;
+    char)
+	__fmt='%c' ;;
+    *)  LOG "AC_WHATIS $MODE $MACRO -- mode isn't string, int, or char"
+	return 1 ;;
+    esac
+
+    (   echo '#include <stdio.h>'
+
+	for x in "$@"; do
+	    echo "#include <${x}>"
+	done
+
+	echo "main() { printf(\"${MACRO}=\\\"${__fmt}\\\"\\n\", ${MACRO}); }" )  > _ngc$$.c
+
+    if $AC_CC -o _ngc$$ _ngc$$.c; then
+	./_ngc$$
+	rc=0
+    else
+	rc=1
+    fi
+    rm -f _ngc$$ _ngc$$.c
+    return $rc
+}
+
+
+#
 # AC_SCALAR_TYPES checks to see if the compiler can generate 2 and 4 byte ints.
 #
 AC_SCALAR_TYPES () {
