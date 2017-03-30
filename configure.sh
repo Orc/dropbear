@@ -6,7 +6,26 @@
 # make certain that what you quote is what you want to quote.
 
 ac_help='--with-pam		Use pam for server authentication
---with-passwd		use passwd authentication (does not coexist with pam)'
+--with-passwd		use passwd authentication (does not coexist with pam)
+--without-zlib		Don'\''t use zlib compression'
+
+LOCAL_AC_OPTIONS='
+set=`locals $*`;
+if [ "$set" ]; then
+    eval $set
+    shift 1
+else
+    ac_error=T;
+fi'
+
+locals() {
+    K=`echo $1 | $AC_UPPERCASE`
+    case "$K" in
+    --WITHOUT-ZLIB|--WITHOUT_ZLIB)
+	    echo DISABLE_ZLIB=T
+	;;
+    esac
+}
 
 # load in the configuration file
 #
@@ -22,12 +41,12 @@ if [ "$WITH_PAM" ]; then
 	AC_DEFINE 'DROPBEAR_SVR_PAM_AUTH' '1'
 	AC_SUB 'CRYPTLIB' ''
     else
-	AC_FAIL "configured --with-pam, but no pam library found?"
+	AC_FAIL "--with-pam requires a pam library"
     fi
 fi
 if [ "$WITH_PASSWD" ]; then
     if [ "$WITH_PAM" ]; then
-	AC_FAIL "cannot sensibly do passwd & pam authentication"
+	AC_FAIL "cannot sensibly do both passwd & pam authentication"
     else
 	if AC_LIBRARY crypt -lcrypt; then
 	    AC_DEFINE 'DROPBEAR_SVR_PASSWD_AUTH' '1'
@@ -38,13 +57,16 @@ if [ "$WITH_PASSWD" ]; then
     fi
 fi
 
-LOG "Building with ${WITH_PAM:+pam}${WITH_PASSWD:+passwd} authentication"
-
 AC_SUB 'BUNDLED_LIBTOM' '1'
 AC_DEFINE 'BUNDLED_LIBTOM' 1
 AC_SUB 'EXEEXT' ''
 
-AC_LIBRARY inflate -lz || FAIL "dropbear needs zlib"
+if [ "$DISABLE_ZLIB" ]; then
+    AC_DEFINE 'DISABLE_ZLIB' '1'
+    AC_SUB 'DISABLE_ZLIB' '1'
+elif ! AC_LIBRARY inflate -lz; then
+    AC_FAIL "$TARGET needs zlib unless configured --without-zlib"
+fi
 
 AC_CHECK_HEADERS netinet/tcp.h
 AC_CHECK_HEADERS netinet/in_systm.h
