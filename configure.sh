@@ -30,8 +30,6 @@ AC_DEFINE 'BUNDLED_LIBTOM' 1
 AC_SUB 'EXEEXT' ''
 AC_SUB 'CRYPTLIB' ''
 
-AC_DEFINE 'explicit_bzero(x,s)' 'memset(x, 0, s)'
-
 AC_LIBRARY inflate -lz || FAIL "dropbear needs zlib"
 
 AC_CHECK_HEADERS netinet/tcp.h
@@ -72,13 +70,38 @@ if AC_CHECK_HEADERS sys/types.h; then
     AC_CHECK_TYPE u_int32_t sys/types.h
     AC_CHECK_TYPE u_int8_t sys/types.h
 fi
+
+# welcome to the horrible horrible land of utmp;
+# check for utmpx, then a bunch of utmpx fields,
+# and if that fails check for utmp and a bunch of
+# utmp fields, and if that fails maybe hand it off
+# to login?
+if AC_CHECK_HEADERS utmpx.h; then
+    for field in ut_host ut_syslen ut_type ut_id ut_addr ut_addr_v6 ut_time ut_tv; do
+	AC_CHECK_FIELD  utmpx $field utmpx.h
+    done
+elif AC_CHECK_HEADER utmp.h; then
+    AC_DEFINE DISABLE_UTMPX 1
+    for field in ut_host ut_pid ut_type ut_tv ut_id ut_addr ut_addr_v6 ut_exit ut_time; do
+	AC_CHECK_FIELD utmp $field utmp.h
+    done
+else
+    AC_DEFINE DISABLE_UTMPX 1
+    AC_DEFINE DISABLE_UTMP 1
+fi
+
 AC_CHECK_HEADERS util.h
-AC_CHECK_HEADERS utmpx.h
-AC_CHECK_HEADERS utmp.h
 AC_CHECK_FUNCS writev
-AC_LIBRARY _getpty -lutil
 AC_LIBRARY openpty -lutil
-AC_CHECK_FUNCS memset_s
+AC_LIBRARY _getpty -lutil
+
+if AC_CHECK_FUNCS explicit_bzero || AC_CHECK_FUNCS memset_s; then
+    : Yay
+else
+    LOG "Whoops: leaving a big old security hole here"
+    AC_DEFINE 'explicit_bzero(x,s)' 'memset(x, 0, s)'
+fi
+
 
 if AC_CHECK_HEADERS security/pam_appl.h; then
     __pamh=security/pam_appl.h

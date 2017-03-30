@@ -610,15 +610,18 @@ AC_LIBRARY() {
     # current libraries
     AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs && return 0
 
+    LOGN "Looking for a library containing ${SRC}() "
     # then search through the list of libraries
     __libs="$LIBS"
     for x in $__acllibs; do
 	LIBS="$__libs $x"
 	if AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs; then
 	    AC_LIBS="$AC_LIBS $x"
+	    LOG "(in $x)"
 	    return 0
 	fi
     done
+    LOG "(not found)"
     LIBS="$__libs"	# reset LIBS if we couldn't find anything
     return 1
 }
