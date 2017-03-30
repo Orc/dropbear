@@ -334,7 +334,8 @@ EOF
     LOGN "checking that struct $struct has a $field field"
 
     if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE HAVE_`echo ${struct}_$field | $AC_UPPERCASE`
+	# HAVE_STRUCT_ is for Gnu configure compatability
+	AC_DEFINE HAVE_STRUCT_`echo ${struct}_$field | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
