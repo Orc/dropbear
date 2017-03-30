@@ -77,6 +77,7 @@ fi
 # utmp fields, and if that fails maybe hand it off
 # to login?
 if AC_CHECK_HEADERS utmpx.h; then
+    AC_DEFINE DISABLE_UTMP 1
     for field in ut_host ut_syslen ut_type ut_id ut_addr ut_addr_v6 ut_time ut_tv; do
 	AC_CHECK_FIELD  utmpx $field utmpx.h
     done
