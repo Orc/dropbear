@@ -108,10 +108,12 @@ if AC_CHECK_HEADERS sys/types.h; then
 fi
 
 # welcome to the horrible horrible land of utmp;
+# check for login(), and if that doesn't exist
 # check for utmpx, then a bunch of utmpx fields,
-# and if that fails check for utmp and a bunch of
-# utmp fields, and if that fails maybe hand it off
-# to login?
+# and if that fails or if login() exists then
+# check for utmp and a bunch of utmp fields, and
+# if that fails maybe fall off the edge of the
+# earth?
 if AC_LIBRARY login -lutil; then
     # login implies utmp
     AC_CHECK_FUNCS logout
@@ -123,18 +125,17 @@ if [ ! "$DISABLE_UTMPX" ] && AC_CHECK_HEADERS utmpx.h; then
     for field in ut_host ut_syslen ut_type ut_id ut_addr ut_addr_v6 ut_time ut_tv; do
 	AC_CHECK_FIELD  utmpx $field utmpx.h
     done
+    AC_CHECK_FUNCS logwtmpx
 elif [ ! "$DISABLE_UTMP" ] && AC_CHECK_HEADERS utmp.h; then
     AC_DEFINE DISABLE_UTMPX 1
     for field in ut_host ut_pid ut_type ut_tv ut_id ut_addr ut_addr_v6 ut_exit ut_time; do
 	AC_CHECK_FIELD utmp $field utmp.h
     done
+    AC_CHECK_FUNCS logwtmp
 else
     AC_DEFINE DISABLE_UTMPX 1
     AC_DEFINE DISABLE_UTMP 1
 fi
-
-AC_CHECK_FUNCS logwtmp
-AC_CHECK_FUNCS logwtmpx
 
 AC_CHECK_HEADERS util.h
 AC_CHECK_FUNCS writev
@@ -143,9 +144,13 @@ AC_LIBRARY _getpty -lutil
 
 if AC_CHECK_FUNCS explicit_bzero || AC_CHECK_FUNCS memset_s; then
     : Yay
+elif [ "$IS_GCC" ]; then
+    LOG "Whoops: kludging around the lack of an explicit_bzero()"
+    AC_CC="$AC_CC -fno-builtin-memset"
+    AC_DEFINE 'explicit_bzero(x,s)' 'memset(x,0,s)'
 else
-    LOG "Whoops: leaving a big old security hole here"
-    AC_DEFINE 'explicit_bzero(x,s)' 'memset(x, 0, s)'
+    LOG "Whoops: no explicit_bzero -- faking with two memset()s"
+    AC_DEFINE 'explicit_bzero(x,s)' '(memset(x,-1,s),memset(x,0,s))'
 fi
 
 
