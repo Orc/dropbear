@@ -128,23 +128,12 @@ elif AC_CHECK_HEADERS pam/pam_appl.h; then
     __pamh=pam/pam_appl.h
 fi
 
+# Does our pam define PAM_FAIL_DELAY?
 if [ "$__pamh" ]; then
-    # is PAM_FAIL_DELAY defined in pam
-
-cat > /tmp/__ngc$$.c << EOF
-#include <stdio.h>
-#include <$__pamh>
-main()
-{
-    printf("PAM_FAIL_DELAY=%d\n", PAM_FAIL_DELAY);
-}
-EOF
-
-    if AC_QUIET $AC_CC -c /tmp/__ngc$$.c ; then
-	LOG "PAM_FAIL_DELAY is defined"
+    if AC_WHATIS int PAM_FAIL_DELAY $__pamh ; then
+	LOG "PAM_FAIL_DELAY defined in $__pamh"
 	AC_DEFINE 'HAVE_PAM_FAIL_DELAY' '1'
     fi
-    rm -f /tmp/__ngc$$.o /tmp/__ngc$$.c
 fi
 
 AC_OUTPUT Makefile libtomcrypt/Makefile libtommath/Makefile
