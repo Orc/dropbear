@@ -164,3 +164,6 @@ if [ "$__pamh" ]; then
 fi
 
 AC_OUTPUT Makefile libtomcrypt/Makefile libtommath/Makefile
+# localoptions.h is #included before config.h, so just symlink it
+# to bring config.h forward in the inclusion heap.
+ln -sf config.h localoptions.h
