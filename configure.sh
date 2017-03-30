@@ -90,13 +90,18 @@ fi
 # and if that fails check for utmp and a bunch of
 # utmp fields, and if that fails maybe hand it off
 # to login?
-AC_LIBRARY login -lutil && AC_CHECK_FUNCS logout
-if AC_CHECK_HEADERS utmpx.h; then
+if AC_LIBRARY login -lutil; then
+    # login implies utmp
+    AC_CHECK_FUNCS logout
+    DISABLE_UTMPX=1
+fi
+
+if [ ! "$DISABLE_UTMPX" ] && AC_CHECK_HEADERS utmpx.h; then
     AC_DEFINE DISABLE_UTMP 1
     for field in ut_host ut_syslen ut_type ut_id ut_addr ut_addr_v6 ut_time ut_tv; do
 	AC_CHECK_FIELD  utmpx $field utmpx.h
     done
-elif AC_CHECK_HEADER utmp.h; then
+elif [ ! "$DISABLE_UTMP" ] && AC_CHECK_HEADERS utmp.h; then
     AC_DEFINE DISABLE_UTMPX 1
     for field in ut_host ut_pid ut_type ut_tv ut_id ut_addr ut_addr_v6 ut_exit ut_time; do
 	AC_CHECK_FIELD utmp $field utmp.h
