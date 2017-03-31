@@ -165,18 +165,21 @@ __MAKEDOTO() {
 #
 AC_CHECK_HEADERS () {
 
-    echo "/* AC_CHECK_HEADERS */" > ngc$$.c
-    for hdr in $*; do
-	echo "#include <$hdr>" >> ngc$$.c
-    done
-    echo "int main() { }" >> ngc$$.c
+    __hdr=$1
+    AC_PROG_CPP
 
-    LOGN "looking for header $hdr"
+    shift
+    (   echo "/* AC_CHECK_HEADERS */"
+	echo "#include <${__hdr}>" ) > ngc$$.c
 
-    if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE 'HAVE_'`echo $hdr | $AC_UPPERCASE | tr './' '_'` 1
+    LOGN "looking for header $__hdr"
+
+    if $AC_CPP_FILTER ngc$$.c >/dev/null; then
+	AC_DEFINE 'HAVE_'`echo $__hdr | $AC_UPPERCASE | tr './' '_'` 1
 	rc=0
+	LOG " (found)"
     else
+	LOG " (not found)"
 	rc=1
     fi
     __remove ngc$$.c
@@ -1531,6 +1534,7 @@ EOF
 	    echo "CPP=[$1], CPPFLAGS=[$2]"
 	    AC_SUB 'CPP' "$1"
 	    AC_SUB 'CPPFLAGS' "$2"
+	    AC_CPP_FILTER="$1 $2"
 	    rm ngc$$.c ngc$$.o
 	    return 0
 	fi
@@ -1539,12 +1543,13 @@ EOF
     return 1
 }
 
-
 #
 # AC_PROG_CPP checks for cpp, then checks to see which CPPFLAGS are needed
 # to run it as a filter.
 #
 AC_PROG_CPP () {
+    test "$AC_CPP_FILTER" && return
+
     if [ "$AC_CPP_PROG" ]; then
 	DEST=$AC_CPP_PROG
     else
