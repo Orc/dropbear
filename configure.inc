@@ -613,20 +613,23 @@ AC_LIBRARY() {
 
     # first see if the function can be found in any of the
     # current libraries
-    AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs && return 0
+    LOGN "Looking for the ${SRC} function"
+    if AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs; then
+	LOG "(found)"
+	return 0
+    fi
 
-    LOGN "Looking for a library containing ${SRC}() "
-    # then search through the list of libraries
+    # then search through the supplied list of libraries
     __libs="$LIBS"
     for x in $__acllibs; do
 	LIBS="$__libs $x"
 	if AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs; then
 	    AC_LIBS="$AC_LIBS $x"
-	    LOG "(in $x)"
+	    LOG " (in $x)"
 	    return 0
 	fi
     done
-    LOG "(not found)"
+    LOG " (not found)"
     LIBS="$__libs"	# reset LIBS if we couldn't find anything
     return 1
 }
