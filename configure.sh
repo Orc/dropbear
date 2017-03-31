@@ -71,12 +71,12 @@ fi
 AC_CHECK_HEADERS netinet/tcp.h
 AC_CHECK_HEADERS netinet/in_systm.h
 if AC_CHECK_HEADERS netinet/in.h; then
-    __hfile=netinet/in.h
-    AC_CHECK_STRUCT sockaddr_storage $__hfile
-    AC_CHECK_STRUCT in6_addr $__hfile
-    if AC_CHECK_HEADERS sys/socket.h; then
+    __hfile="sys/types.h sys/uio.h netinet/in.h"
+    if AC_CHECK_HEADERS sys/socket.h $__arpah; then
 	__hfile="$__hfile sys/socket.h"
     fi
+    AC_CHECK_STRUCT sockaddr_storage $__hfile 
+    AC_CHECK_STRUCT in6_addr $__hfile
     AC_CHECK_STRUCT sockaddr_in6 $__hfile
 fi
 AC_CHECK_HEADERS netdb.h && AC_CHECK_STRUCT addrinfo netdb.h
@@ -88,6 +88,7 @@ AC_CHECK_FUNCS getnameinfo
 AC_CHECK_FUNCS getpass
 AC_CHECK_FUNCS getusershell
 AC_CHECK_HEADERS inttypes.h
+AC_CHECK_HEADERS stdint.h
 AC_CHECK_HEADERS lastlog.h
 AC_CHECK_HEADERS libgen.h
 AC_CHECK_HEADERS libutil.h
@@ -129,7 +130,7 @@ if [ ! "$DISABLE_UTMPX" ] && AC_CHECK_HEADERS utmpx.h; then
 elif [ ! "$DISABLE_UTMP" ] && AC_CHECK_HEADERS utmp.h; then
     AC_DEFINE DISABLE_UTMPX 1
     for field in ut_host ut_pid ut_type ut_tv ut_id ut_addr ut_addr_v6 ut_exit ut_time; do
-	AC_CHECK_FIELD utmp $field utmp.h
+	AC_CHECK_FIELD utmp $field sys/types.h utmp.h
     done
     AC_CHECK_FUNCS logwtmp
 else
