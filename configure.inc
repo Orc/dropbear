@@ -1027,6 +1027,7 @@ AC_OUTPUT () {
     AC_SUB 'srcdir'  "$AC_SRCDIR"
     AC_SUB 'prefix'  "$AC_PREFIX"
     AC_SUB 'exedir'  "$AC_EXECDIR"
+    AC_SUB 'bindir'  "$AC_EXECDIR"
     AC_SUB 'sbindir' "$AC_SBINDIR"
     AC_SUB 'libdir'  "$AC_LIBDIR"
     AC_SUB 'libexec' "$AC_LIBEXEC"
