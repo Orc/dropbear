@@ -70,7 +70,7 @@ void write_packet() {
 	TRACE2(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
 
-#if defined(HAVE_WRITEV) && (defined(IOV_MAX) || defined(UIO_MAXIOV))
+#if defined(HAVE_WRITEV)
 
 	packet_queue_to_iovec(&ses.writequeue, iov, &iov_count);
 	/* This may return EAGAIN. The main loop sometimes
