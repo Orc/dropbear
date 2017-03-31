@@ -47,7 +47,12 @@
  */
 
 #include <string.h>
-#include <stdint.h>
+
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#else
+# include <inttypes.h>
+#endif
 
 #ifdef _MSC_VER
 #define inline __inline
