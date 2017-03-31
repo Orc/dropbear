@@ -68,6 +68,7 @@ elif ! AC_LIBRARY inflate -lz; then
     AC_FAIL "$TARGET needs zlib unless configured --without-zlib"
 fi
 
+AC_CHECK_HEADERS sys/uio.h
 AC_CHECK_HEADERS netinet/tcp.h
 AC_CHECK_HEADERS netinet/in_systm.h
 if AC_CHECK_HEADERS netinet/in.h; then
@@ -98,7 +99,6 @@ AC_CHECK_HEADERS pty.h
 AC_CHECK_HEADERS shadow.h
 AC_CHECK_FUNCS strlcat
 AC_CHECK_FUNCS strlcpy
-AC_CHECK_HEADERS sys/uio.h
 if AC_CHECK_HEADERS sys/types.h; then
     AC_CHECK_TYPE uint16_t sys/types.h
     AC_CHECK_TYPE uint32_t sys/types.h
@@ -138,8 +138,14 @@ else
     AC_DEFINE DISABLE_UTMP 1
 fi
 
+if AC_CHECK_FUNCS writev ; then
+    # if we have writev, we need UIO_MAXIOV; if UIO_MAXIOV isn't defined
+    # (or is defined behind a _KERNEL|KERNEL|LINUX_KERNEL|mAgIc_KeRnEl ifdef)
+    # set it to the posix minimum of 16
+    AC_WHATIS int UIO_MAXIOV sys/uio.h || AC_DEFINE 'UIO_MAXIOV' '16'
+fi
+
 AC_CHECK_HEADERS util.h
-AC_CHECK_FUNCS writev
 AC_LIBRARY openpty -lutil
 AC_LIBRARY _getpty -lutil
 
