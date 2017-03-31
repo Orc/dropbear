@@ -36,10 +36,10 @@ AC_INIT $TARGET
 
 AC_PROG_CC
 
+CRYPTLIB=''
 if [ "$WITH_PAM" ]; then
     if AC_LIBRARY pam_authenticate -lpam; then
 	AC_DEFINE 'DROPBEAR_SVR_PAM_AUTH' '1'
-	AC_SUB 'CRYPTLIB' ''
     else
 	AC_FAIL "--with-pam requires a pam library"
     fi
@@ -47,15 +47,15 @@ fi
 if [ "$WITH_PASSWD" ]; then
     if [ "$WITH_PAM" ]; then
 	AC_FAIL "cannot sensibly do both passwd & pam authentication"
+    elif AC_LIBRARY crypt -lcrypt; then
+	AC_DEFINE 'DROPBEAR_SVR_PASSWD_AUTH' '1'
+	CRYPTLIB='-lcrypt'
     else
-	if AC_LIBRARY crypt -lcrypt; then
-	    AC_DEFINE 'DROPBEAR_SVR_PASSWD_AUTH' '1'
-	    AC_SUB CRYPTLIB '-lcrypt'
-	else
-	    AC_FAIL "--with-passwd requires a crypt() function"
-	fi
+	AC_FAIL "--with-passwd requires a crypt() function"
     fi
 fi
+
+AC_SUB CRYPTLIB "$CRYPTLIB"
 
 AC_SUB 'BUNDLED_LIBTOM' '1'
 AC_DEFINE 'BUNDLED_LIBTOM' 1
