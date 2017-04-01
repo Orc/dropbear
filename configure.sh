@@ -77,6 +77,7 @@ if AC_CHECK_HEADERS netinet/in.h; then
 	__hfile="$__hfile sys/socket.h"
     fi
     AC_CHECK_STRUCT sockaddr_storage $__hfile 
+    AC_CHECK_FIELD  sockaddr_storage ss_family $__hfile
     AC_CHECK_STRUCT in6_addr $__hfile
     AC_CHECK_STRUCT sockaddr_in6 $__hfile
 fi
