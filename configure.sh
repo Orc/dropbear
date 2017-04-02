@@ -7,7 +7,9 @@
 
 ac_help='--with-pam		Use pam for server authentication
 --with-passwd		use passwd authentication (does not coexist with pam)
---without-zlib		Don'\''t use zlib compression'
+--with-path=path	Set default path
+--disable-login		Don'\''t use login() / logout() to record logins
+--disable-zlib		Don'\''t use zlib compression'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -21,9 +23,10 @@ fi'
 locals() {
     K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
-    --WITHOUT-ZLIB|--WITHOUT_ZLIB)
-	    echo DISABLE_ZLIB=T
-	;;
+    --DISABLE-LOGIN|--DISABLE_LOGIN)
+	    echo DISABLE_LOGIN=T ;;
+    --DISABLE-ZLIB|--DISABLE_ZLIB)
+	    echo DISABLE_ZLIB=T ;;
     esac
 }
 
@@ -37,6 +40,12 @@ AC_INIT $TARGET
 AC_PROG_CC
 
 CRYPTLIB=''
+if [ "$WITH_PATH" ]; then
+    case "$WITH_PATH" in
+    *:*) # an actual path; use it
+	AC_DEFINE 'DEFAULT_PATH' \"$WITH_PATH\" ;;
+    esac
+fi
 if [ "$WITH_PAM" ]; then
     if AC_LIBRARY pam_authenticate -lpam; then
 	AC_DEFINE 'DROPBEAR_SVR_PAM_AUTH' '1'
@@ -116,7 +125,7 @@ fi
 # check for utmp and a bunch of utmp fields, and
 # if that fails maybe fall off the edge of the
 # earth?
-if AC_LIBRARY login -lutil; then
+if [ ! "$DISABLE_LOGIN" ] && AC_LIBRARY login -lutil; then
     # login implies utmp
     AC_CHECK_FUNCS logout
     DISABLE_UTMPX=1
