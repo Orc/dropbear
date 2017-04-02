@@ -1224,11 +1224,10 @@ syslogin_perform_logout(struct logininfo *li)
 
 	if (!logout(line)) {
 		dropbear_log(LOG_WARNING, "syslogin_perform_logout: logout(%s) returned an error: %s", line, strerror(errno));
-#  ifdef HAVE_LOGWTMP
-	} else {
-		logwtmp(line, "", "");
-#  endif
 	}
+#  ifdef HAVE_LOGWTMP
+	logwtmp(line, "", "");
+#  endif
 	/* FIXME: (ATL - if the need arises) What to do if we have
 	 * login, but no logout?  what if logout but no logwtmp? All
 	 * routines are in libutil so they should all be there,
